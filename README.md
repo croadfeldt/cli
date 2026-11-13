@@ -513,9 +513,24 @@ Create a new catalog item instance.
 |------|----------|-------------|
 | `--from-file` | Yes | Path to instance YAML/JSON file |
 | `--id` | No | Client-specified instance ID |
+| `--generate-ssh-key` | No | Local account name. Generates an SSH key pair on this machine and sends only the public key |
+| `--ssh-key-file` | No | Where to write the generated private key (default `<login>_ed25519`); the public key goes beside it as `.pub` |
+| `--ssh-key-resource` | No | Catalog item resource that takes the key (default: the only resource in the file) |
+| `--ssh-key-path` | No | User value path of the authorized keys list (default `authorized_keys`) |
 
 ```bash
 dcm catalog instance create --from-file instance.yaml
+```
+
+With `--generate-ssh-key`, the key pair is made by the CLI. The request gains one entry,
+`{login, public_key}`, in the resource's `authorized_keys` user value (UDLM Machine `authorized_keys`).
+The private key is written to a file with mode 0600 and is not sent or stored anywhere else. An
+existing key file is never replaced, and the files are removed if the control plane refuses the
+request.
+
+```bash
+dcm catalog instance create --from-file instance.yaml --generate-ssh-key cloud-user --ssh-key-file ./bastion-01
+ssh -i ./bastion-01 cloud-user@<address>
 ```
 
 Instance file format (multi-resource schema):
