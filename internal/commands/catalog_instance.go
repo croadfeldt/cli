@@ -72,6 +72,25 @@ func newCatalogInstanceCreateCommand() *cobra.Command {
 				params.Id = &id
 			}
 
+			// The key pair is made here, on the caller's machine: only the public
+			// half goes in the request, so no private key crosses the platform.
+			keyCleanup := func() {}
+			keyFile := ""
+			if login, _ := cmd.Flags().GetString("generate-ssh-key"); login != "" {
+				req := sshKeyRequest{login: login}
+				req.file, _ = cmd.Flags().GetString("ssh-key-file")
+				req.resource, _ = cmd.Flags().GetString("ssh-key-resource")
+				req.path, _ = cmd.Flags().GetString("ssh-key-path")
+				if req.file == "" {
+					req.file = login + "_ed25519"
+				}
+				keyFile = req.file
+				keyCleanup, err = prepareSSHKey(&body.Spec, req, login+"@"+body.DisplayName)
+				if err != nil {
+					return err
+				}
+			}
+
 			client, err := newCatalogClient(cfg)
 			if err != nil {
 				return fmt.Errorf("creating catalog client: %w", err)
@@ -82,17 +101,22 @@ func newCatalogInstanceCreateCommand() *cobra.Command {
 
 			resp, err := client.CreateCatalogItemInstance(ctx, params, body)
 			if err != nil {
+				keyCleanup()
 				return connectionError(err, cfg)
 			}
 			defer func() { _ = resp.Body.Close() }()
 
 			if resp.StatusCode != http.StatusCreated {
+				keyCleanup()
 				return handleErrorResponse(resp, formatter)
 			}
 
 			var result map[string]any
 			if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
 				return fmt.Errorf("parsing response: %w", err)
+			}
+			if keyFile != "" {
+				fmt.Fprintf(cmd.ErrOrStderr(), "SSH private key written to %s (public key: %s.pub). It is not stored anywhere else.\n", keyFile, keyFile)
 			}
 
 			return formatter.FormatOne(result)
@@ -102,6 +126,10 @@ func newCatalogInstanceCreateCommand() *cobra.Command {
 	cmd.Flags().String("from-file", "", "Path to instance YAML/JSON file (required)")
 	_ = cmd.MarkFlagRequired("from-file")
 	cmd.Flags().String("id", "", "Client-specified instance ID")
+	cmd.Flags().String("generate-ssh-key", "", "Generate an SSH key pair here for this local account and send only the public key")
+	cmd.Flags().String("ssh-key-file", "", "Where to write the generated private key (default: <login>_ed25519)")
+	cmd.Flags().String("ssh-key-resource", "", "Catalog item resource that takes the key (default: the only resource in the file)")
+	cmd.Flags().String("ssh-key-path", defaultAuthorizedKeysPath, "User value path of the authorized keys list")
 
 	return cmd
 }

@@ -1,6 +1,6 @@
 module github.com/dcm-project/cli
 
-go 1.25.5
+go 1.26.0
 
 require (
 	github.com/coreos/go-oidc/v3 v3.20.0
@@ -11,6 +11,7 @@ require (
 	github.com/spf13/viper v1.21.0
 	github.com/zalando/go-keyring v0.2.6
 	go.yaml.in/yaml/v3 v3.0.4
+	golang.org/x/crypto v0.59.0
 	golang.org/x/oauth2 v0.36.0
 )
 
@@ -48,11 +49,11 @@ require (
 	github.com/spf13/pflag v1.0.10 // indirect
 	github.com/subosito/gotenv v1.6.0 // indirect
 	github.com/woodsbury/decimal128 v1.4.0 // indirect
-	golang.org/x/mod v0.37.0 // indirect
-	golang.org/x/net v0.56.0 // indirect
-	golang.org/x/sync v0.21.0 // indirect
-	golang.org/x/sys v0.46.0 // indirect
-	golang.org/x/text v0.39.0 // indirect
-	golang.org/x/tools v0.47.0 // indirect
+	golang.org/x/mod v0.42.0 // indirect
+	golang.org/x/net v0.62.0 // indirect
+	golang.org/x/sync v0.25.0 // indirect
+	golang.org/x/sys v0.50.0 // indirect
+	golang.org/x/text v0.44.0 // indirect
+	golang.org/x/tools v0.52.0 // indirect
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
 )
